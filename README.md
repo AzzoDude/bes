@@ -103,23 +103,15 @@ $$\text{Absolute Seek Address} = \text{DataOffset} + (r \times \text{RowSize}) +
 
 ---
 
-## Tooling & Setup
+## Web Viewer & Compiler Interface
 
-To compile and inspect BES files, you can use the built-in compiler script or host the dark-mode web interface.
+The compiled web interface is located in the `docs` folder. It runs entirely client-side in the browser and requires no server-side backend.
 
-### Prerequisites
-* [Node.js](https://nodejs.org/) (v16+)
-
-### Installation
-Clone the repository and install dependencies:
-```bash
-git clone https://github.com/AzzoDude/bes
-cd bes
-npm install
-```
-
-### Rebuilding Assets
-After modifying source scripts in the `docs/js` directory, compile the production bundle:
-```bash
-npx esbuild docs/js/app.js --bundle --outfile=docs/js/bundle.js --format=iife
-```
+### Hosting
+* **GitHub Pages**: You can host this repository directly using GitHub Pages by setting the source branch to your master/main branch and pointing to the `/docs` folder.
+* **Local Web Server**: Alternatively, you can run a local server inside the `docs` directory:
+  ```bash
+  cd docs
+  python -m http.server 8000
+  ```
+  Then open `http://localhost:8000` in your web browser.
