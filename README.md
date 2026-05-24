@@ -25,7 +25,7 @@ A compiled BES file is structured into five distinct segments:
 ```text
   +-------------------------------------------------------------+
   |                   Header Segment (24 Bytes)                 |
-  |  - Magic Signature: "BESM", "BES\0", or "BES "              |
+  |  - Magic Signature: "BESM", "BESL", or "BESP"              |
   |  - Version & NumTypes                                       |
   |  - StringTableOffset & BlobPoolOffset                       |
   +-------------------------------------------------------------+
@@ -68,7 +68,7 @@ The header resides at byte offset `0x00` and contains global directory markers:
 
 | Offset | Size (Bytes) | Data Type | Field Name | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `0x00` | 4 | `char[4]` | `Magic` | Magic identifier signature; must be `"BES\0"`, `"BES "` or `"BESM"` |
+| `0x00` | 4 | `char[4]` | `Magic` | Magic identifier signature; must be `"BESL"`, `"BESP"` or `"BESM"` |
 | `0x04` | 4 | `uint32` | `Version` | File format version number |
 | `0x08` | 4 | `uint32` | `NumTypes` | Total number of compiled record types |
 | `0x0C` | 4 | `uint32` | `StringTableOffset` | Absolute byte offset to the String Table |
