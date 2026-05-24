@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Binary Elder Scrolls Master (BES) file compiler and database viewer with integrated 2D cell heatmap and coordinate plot option.">
+    <title>Binary Elder Scrolls Master (BES) Database & Compiler</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Top Bar Controls -->
+    <div class="controls">
+        <input type="file" id="fileInput" accept=".besm,.csv,.besp,.besl,.esm,.esp,.esl">
+        <select id="subsectorSelect" style="display: none;"></select>
+        <select id="gamePresetSelect" style="display: none;">
+            <option value="skyrim">Skyrim Preset</option>
+            <option value="fallout4">Fallout 4 Preset</option>
+        </select>
+        <button id="compileBtn" class="btn" style="display: none;"></button>
+        <input type="text" id="searchBox" placeholder="Filter search...">
+        <button id="rebuildBtn" class="btn" style="display: none;">Rebuild ESM/ESP/ESL</button>
+        <span id="status" class="status">Ready</span>
+    </div>
+
+    <!-- Tab Buttons -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('database-view')">Grid Viewer</button>
+        <button class="tab-btn" onclick="switchTab('chronology-view')">Chronological Log</button>
+        <button class="tab-btn" onclick="switchTab('schema-view')">Schemas</button>
+        <button class="tab-btn" onclick="switchTab('strings-view')">Strings Map</button>
+        <button class="tab-btn" onclick="switchTab('how-it-works-view')">How it Works</button>
+    </div>
+
+    <!-- Tab Panels -->
+    <!-- Tab 1: Database Grid -->
+    <div id="database-view" class="panel active">
+        <!-- View Mode Toolbar inside Grid Viewer -->
+        <div class="view-mode-bar" id="viewModeBar" style="display: none;">
+            <span>View Mode:</span>
+            <button class="view-btn active" id="view-btn-default" onclick="setViewMode('default')">Grid Table</button>
+            <button class="view-btn" id="view-btn-spatial" onclick="setViewMode('spatial')">2D Spatial View</button>
+        </div>
+
+        <!-- Option A: Default Grid Table -->
+        <div class="table-container" id="default-grid-container">
+            <table>
+                <thead id="db-headers">
+                    <tr><th>Load a BESM/BESP/BESL or CSV file to start</th></tr>
+                </thead>
+                <tbody id="db-body"></tbody>
+            </table>
+        </div>
+
+        <!-- Option B: 2D Spatial Layout (Map Canvas + Cell Grid Table + Inspector) -->
+        <div class="spatial-container" id="spatial-grid-container" style="display: none;">
+            <!-- Left: Interactive Canvas Map -->
+            <div class="spatial-left">
+                <div class="spatial-canvas-header">
+                    <span class="badge" id="spatial-count-badge">0 Objects</span>
+                    <button class="spatial-ctrl-btn" id="btn-fit" title="Zoom Fit">Fit</button>
+                    <button class="spatial-ctrl-btn" id="btn-zin" title="Zoom In">+</button>
+                    <button class="spatial-ctrl-btn" id="btn-zout" title="Zoom Out">-</button>
+                    <button class="spatial-ctrl-btn" id="btn-clear-cell" style="display: none; color: #ffb86c;">Clear Cell Filter</button>
+                </div>
+                <div class="canvas-parent">
+                    <canvas id="spatial-canvas"></canvas>
+                    <div class="canvas-help-text">Drag to Pan | Scroll to Zoom | Click point to Inspect</div>
+                </div>
+            </div>
+
+            <!-- Right: 2D Cell Heatmap Matrix Grid + Selected Detail Inspector -->
+            <div class="spatial-right">
+                <!-- Upper: Cell Heatmap Table -->
+                <div class="spatial-heatmap-section">
+                    <div class="section-title">2D Cell Heatmap Grid</div>
+                    <div class="heatmap-table-scroll" id="cell-matrix-container">
+                        <div style="color: #888; padding: 10px; text-align: center;">No spatial records loaded</div>
+                    </div>
+                </div>
+
+                <!-- Lower: Inspector Panel -->
+                <div class="spatial-inspector-section">
+                    <div class="section-title">Inspector Details</div>
+                    <div class="inspector-scroll" id="inspector-content">
+                        <div style="color: #888; padding: 10px; text-align: center;">Select an object on the map to inspect its data fields</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer / Pagination -->
+        <div class="footer" id="db-footer">
+            <span id="db-page-info">Showing 0-0 of 0</span>
+            <div class="footer-btns">
+                <button class="footer-btn" id="db-prev-btn" onclick="changeDbPage(-1)" disabled>Prev</button>
+                <button class="footer-btn" id="db-next-btn" onclick="changeDbPage(1)" disabled>Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 2: Chronological Log -->
+    <div id="chronology-view" class="panel">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Idx</th>
+                        <th>Sig</th>
+                        <th>FormID</th>
+                        <th>EditorID</th>
+                        <th>Name</th>
+                        <th>Flags</th>
+                        <th>Size</th>
+                    </tr>
+                </thead>
+                <tbody id="chrono-body">
+                    <tr><td colspan="7" style="text-align: center;">No file loaded</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="footer">
+            <span id="chrono-page-info">Showing 0-0 of 0</span>
+            <div class="footer-btns">
+                <button class="footer-btn" id="chrono-prev-btn" onclick="changeChronoPage(-1)" disabled>Prev</button>
+                <button class="footer-btn" id="chrono-next-btn" onclick="changeChronoPage(1)" disabled>Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 3: Schemas -->
+    <div id="schema-view" class="panel" style="padding: 6px 8px; height: 100%;">
+        <div class="schema-controls" style="display: flex; flex-direction: column; gap: 6px; flex: 1; height: 100%;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="color: #888; font-size: 11px;">Schema Preset:</span>
+                <select id="schemaPresetSelect" onchange="loadSchemaPreset(this.value)" style="background-color: #262626; color: #fff; border: 1px solid #3d3d3d; border-radius: 2px; padding: 2px; font-size: 11px;">
+                    <option value="skyrim">Skyrim Preset</option>
+                    <option value="fallout4">Fallout 4 Preset</option>
+                </select>
+                <button class="btn" style="padding: 1px 8px; font-size: 11px;" onclick="applyCustomSchema()">Apply Schema</button>
+                <button class="btn" style="padding: 1px 8px; font-size: 11px;" onclick="formatSchemaInEditor()">Calculate Offsets &amp; Format</button>
+            </div>
+            <div class="editor-container" style="position: relative; width: 100%; flex: 1; background-color: #121212; border: 1px solid #2d2d2d; border-radius: 2px; overflow: hidden;">
+                <div id="schemaHighlightBackdrop" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; padding: 6px; font-family: Consolas, monospace; font-size: 11px; line-height: 14px; white-space: pre; color: #888; pointer-events: none; overflow: hidden; height: 100%; box-sizing: border-box;"></div>
+                <textarea id="schemaTextarea" oninput="updateSchemaHighlight()" onscroll="syncEditorScroll()" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; background: transparent; color: transparent; caret-color: #fff; border: none; padding: 6px; font-family: Consolas, monospace; font-size: 11px; line-height: 14px; resize: none; overflow: auto; outline: none; box-sizing: border-box; white-space: pre;" placeholder="Enter schema definition string..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 4: Strings Map -->
+    <div id="strings-view" class="panel">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>FormID</th>
+                        <th>Editor ID</th>
+                        <th>Text String</th>
+                    </tr>
+                </thead>
+                <tbody id="strings-body">
+                    <tr><td colspan="3" style="text-align: center;">No file loaded</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="footer">
+            <span id="strings-page-info">Showing 0-0 of 0</span>
+            <div class="footer-btns">
+                <button class="footer-btn" id="strings-prev-btn" onclick="changeStringsPage(-1)" disabled>Prev</button>
+                <button class="footer-btn" id="strings-next-btn" onclick="changeStringsPage(1)" disabled>Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 5: How it Works (Architecture & Binary Specs) -->
+    <div id="how-it-works-view" class="panel">
+        <div class="how-container" style="font-size: 11px; line-height: 14px;">
+            <div class="how-title">BESM Memory Map &amp; Binary Specification</div>
+            
+            <div style="margin-bottom: 8px;">
+                <p style="color: #aaa; margin-bottom: 2px;">The BESM file structure is optimized for rapid multi-core seeking and 1:1 rebuilding. Click on any section block below to inspect its detailed offset mapping and byte-level schema definitions.</p>
+            </div>
+
+            <!-- Memory Map Layout Bar -->
+            <div class="memory-map-bar">
+                <div id="mem-btn-header" class="mem-block active" onclick="showMemBlock('header')">
+                    FILE HEADER<br><span style="color: #888; font-weight: normal; font-size: 9px;">Offset: 0x00 (108B)</span>
+                </div>
+                <div id="mem-btn-directory" class="mem-block" onclick="showMemBlock('directory')">
+                    SUBSECTOR DIR<br><span style="color: #888; font-weight: normal; font-size: 9px;">Offset: 0x6C (sec*40B)</span>
+                </div>
+                <div id="mem-btn-bpool" class="mem-block" onclick="showMemBlock('bpool')">
+                    BLOB POOL (bPool)<br><span style="color: #888; font-weight: normal; font-size: 9px;">[Zlib Deflate Pool]</span>
+                </div>
+                <div id="mem-btn-stable" class="mem-block" onclick="showMemBlock('stable')">
+                    STRING TABLE (sTable)<br><span style="color: #888; font-weight: normal; font-size: 9px;">[Zlib Deflate Pool]</span>
+                </div>
+                <div id="mem-btn-schemas" class="mem-block" onclick="showMemBlock('schemas')">
+                    CUSTOM SCHEMAS<br><span style="color: #888; font-weight: normal; font-size: 9px;">[Zlib Deflate Preset]</span>
+                </div>
+                <div id="mem-btn-reconstruct" class="mem-block" onclick="showMemBlock('reconstruct')">
+                    REBUILD CHRONO MAP<br><span style="color: #888; font-weight: normal; font-size: 9px;">[Zlib Deflate Heap]</span>
+                </div>
+            </div>
+
+            <!-- Detail Sections -->
+            
+            <!-- 1. FILE HEADER -->
+            <div id="mem-detail-header" class="mem-detail active">
+                <div class="table-container" style="border: 1px solid #2d2d2d; max-height: none; overflow: visible;">
+                    <div style="padding: 4px 8px; background-color: #1e1e1e; font-weight: bold; border-bottom: 1px solid #2d2d2d; color: #ff79c6;">File Header Layout (108 Bytes)</div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background-color: #161616; border-bottom: 1px solid #2d2d2d; text-align: left;">
+                                <th style="padding: 4px; font-size: 10px; color: #888; width: 15%;">Offset</th>
+                                <th style="padding: 4px; font-size: 10px; color: #888; width: 15%;">Type</th>
+                                <th style="padding: 4px; font-size: 10px; color: #888; width: 20%;">Field</th>
+                                <th style="padding: 4px; font-size: 10px; color: #888; width: 50%;">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #202020;">
+                                <td class="mono" style="padding: 4px; color: #bd93f9;">0x00 (0)</td>
+                                <td class="mono" style="padding: 4px; color: #8be9fd;">char[4]</td>
+                                <td class="mono" style="padding: 4px; color: #50fa7b; font-weight: bold;">magic</td>
+                                <td style="padding: 4px; color: #ccc;">Magic identifier bytes: 'BESM'</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #202020;">
+                                <td class="mono" style="padding: 4px; color: #bd93f9;">0x04 (4)</td>
+                                <td class="mono" style="padding: 4px; color: #8be9fd;">uint32</td>
+                                <td class="mono" style="padding: 4px; color: #50fa7b;">version</td>
+                                <td style="padding: 4px; color: #ccc;">File format version (0x00000001)</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #202020;">
+                                <td class="mono" style="padding: 4px; color: #bd93f9;">0x08 (8)</td>
+                                <td class="mono" style="padding: 4px; color: #8be9fd;">uint32</td>
+                                <td class="mono" style="padding: 4px; color: #50fa7b;">secCount</td>
+                                <td style="padding: 4px; color: #ccc;">Total count of record subsectors in the directory</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #202020;">
+                                <td class="mono" style="padding: 4px; color: #bd93f9;">0x0C (12)</td>
+                                <td class="mono" style="padding: 4px; color: #8be9fd;">uint64[3]</td>
+                                <td class="mono" style="padding: 4px; color: #50fa7b;">bPool</td>
+                                <td style="padding: 4px; color: #ccc;">Blob Pool Descriptor: [fileOffset, compressedSize, uncompressedSize]</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #202020;">
+                                <td class="mono" style="padding: 4px; color: #bd93f9;">0x24 (36)</td>
+                                <td class="mono" style="padding: 4px; color: #8be9fd;">uint64[3]</td>
+                                <td class="mono" style="padding: 4px; color: #50fa7b;">sTable</td>
+                                <td style="padding: 4px; color: #ccc;">String Table Descriptor: [fileOffset, compressedSize, uncompressedSize]</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #202020;">
+                                <td class="mono" style="padding: 4px; color: #bd93f9;">0x3C (60)</td>
+                                <td class="mono" style="padding: 4px; color: #8be9fd;">uint64[3]</td>
+                                <td class="mono" style="padding: 4px; color: #50fa7b;">schemas</td>
+                                <td style="padding: 4px; color: #ccc;">Schema Preset Descriptor: [fileOffset, compressedSize, uncompressedSize]</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #202020;">
+                                <td class="mono" style="padding: 4px; color: #bd93f9;">0x54 (84)</td>
+                                <td class="mono" style="padding: 4px; color: #8be9fd;">uint64[3]</td>
+                                <td class="mono" style="padding: 4px; color: #50fa7b;">reconstruction</td>
+                                <td style="padding: 4px; color: #ccc;">Reconstruct Map Descriptor: [fileOffset, compressedSize, uncompressedSize]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 2. SUBSECTOR DIRECTORY -->
+            <div id="mem-detail-directory" class="mem-detail">
+                <div class="table-container" style="border: 1px solid #2d2d2d; max-height: none; overflow: visible;">
+                    <div style="padding: 4px 8px; background-color: #1e1e1e; font-weight: bold; border-bottom: 1px solid #2d2d2d; color: #ffb86c;">Subsector Directory Entry (40 Bytes)</div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background-color: #161616; border-bottom: 1px solid #2d2d2d; text-align: left;">
+                                <th style="padding: 4px; font-size: 10px; color: #888; width: 15%;">Offset</th>
+                                <th style="padding: 4px; font-size: 10px; color: #888; width: 15%;">Type</th>
+                                <th style="padding: 4px; font-size: 10px; color: #888; width: 20%;">Field</th>
+                                <th style="padding: 4px; font-size: 10px; color: #888; width: 50%;">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #202020;">
+                                <td class="mono" style="padding: 4px; color: #bd93f9;">0x00 (0)</td>
+                                <td class="mono" style="padding: 4px; color: #8be9fd;">char[4]</td>
+                                <td class="mono" style="padding: 4px; color: #50fa7b; font-weight: bold;">signature</td>
+                                <td style="padding: 4px; color: #ccc;">Record type signature (e.g. 'REFR', 'WEAP')</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #202020;">
+                                <td class="mono" style="padding: 4px; color: #bd93f9;">0x04 (4)</td>
+                                <td class="mono" style="padding: 4px; color: #8be9fd;">uint32</td>
+                                <td class="mono" style="padding: 4px; color: #50fa7b;">rowSize</td>
+                                <td style="padding: 4px; color: #ccc;">Uncompressed size of a single row/record inside the subsector table</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #202020;">
+                                <td class="mono" style="padding: 4px; color: #bd93f9;">0x08 (8)</td>
+                                <td class="mono" style="padding: 4px; color: #8be9fd;">uint32</td>
+                                <td class="mono" style="padding: 4px; color: #50fa7b;">rowCount</td>
+                                <td style="padding: 4px; color: #ccc;">Total record rows stored in this subsector block</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #202020;">
+                                <td class="mono" style="padding: 4px; color: #bd93f9;">0x0C (12)</td>
+                                <td class="mono" style="padding: 4px; color: #8be9fd;">uint64</td>
+                                <td class="mono" style="padding: 4px; color: #50fa7b;">sOffset</td>
+                                <td style="padding: 4px; color: #ccc;">Absolute file offset to the compressed data block</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #202020;">
+                                <td class="mono" style="padding: 4px; color: #bd93f9;">0x14 (20)</td>
+                                <td class="mono" style="padding: 4px; color: #8be9fd;">uint64</td>
+                                <td class="mono" style="padding: 4px; color: #50fa7b;">sCompSize</td>
+                                <td style="padding: 4px; color: #ccc;">Compressed block size (Zlib Deflate)</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #202020;">
+                                <td class="mono" style="padding: 4px; color: #bd93f9;">0x1C (28)</td>
+                                <td class="mono" style="padding: 4px; color: #8be9fd;">uint64</td>
+                                <td class="mono" style="padding: 4px; color: #50fa7b;">sUncompSize</td>
+                                <td style="padding: 4px; color: #ccc;">Uncompressed size of the parsed records table</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. BLOB POOL -->
+            <div id="mem-detail-bpool" class="mem-detail">
+                <div class="table-container" style="border: 1px solid #2d2d2d; max-height: none; overflow: visible;">
+                    <div style="padding: 4px 8px; background-color: #1e1e1e; font-weight: bold; border-bottom: 1px solid #2d2d2d; color: #8be9fd;">Blob Pool Segment (bPool)</div>
+                    <div style="padding: 10px; color: #ccc; line-height: 16px;">
+                        <p style="margin-bottom: 8px;">Uncompressed byte heap containing remainder subrecord fields. Mapped records reference their bytes using a 4-byte <code>BlobOffset</code> field inside the flat record row.</p>
+                        <table style="width: 100%; border-collapse: collapse; font-family: Consolas, monospace; font-size: 10.5px;">
+                            <thead>
+                                <tr style="background-color: #161616; border-bottom: 1px solid #2d2d2d; text-align: left; color: #888;">
+                                    <th style="padding: 4px; width: 20%;">Relative Offset</th>
+                                    <th style="padding: 4px; width: 15%;">Type</th>
+                                    <th style="padding: 4px; width: 20%;">Field</th>
+                                    <th style="padding: 4px; width: 45%;">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid #202020;">
+                                    <td style="padding: 4px; color: #bd93f9;">+0x00 (0)</td>
+                                    <td style="padding: 4px; color: #8be9fd;">char[4]</td>
+                                    <td style="padding: 4px; color: #50fa7b; font-weight: bold;">signature</td>
+                                    <td style="padding: 4px; color: #eee;">Subrecord type signature/tag (e.g. 'VMAD')</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #202020;">
+                                    <td style="padding: 4px; color: #bd93f9;">+0x04 (4)</td>
+                                    <td style="padding: 4px; color: #8be9fd;">uint16</td>
+                                    <td style="padding: 4px; color: #50fa7b;">length</td>
+                                    <td style="padding: 4px; color: #eee;">Subrecord data payload size (len) in bytes</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #202020;">
+                                    <td style="padding: 4px; color: #bd93f9;">+0x06 (6)</td>
+                                    <td style="padding: 4px; color: #8be9fd;">uint8[len]</td>
+                                    <td style="padding: 4px; color: #50fa7b;">payload</td>
+                                    <td style="padding: 4px; color: #eee;">Raw subrecord payload bytes</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. STRING TABLE -->
+            <div id="mem-detail-stable" class="mem-detail">
+                <div class="table-container" style="border: 1px solid #2d2d2d; max-height: none; overflow: visible;">
+                    <div style="padding: 4px 8px; background-color: #1e1e1e; font-weight: bold; border-bottom: 1px solid #2d2d2d; color: #bd93f9;">String Table Segment (sTable)</div>
+                    <div style="padding: 10px; color: #ccc; line-height: 16px;">
+                        <p style="margin-bottom: 8px;">Stores all string mappings (like EDID / FULL string fields) mapped to their corresponding FormIDs. It contains a String Count header, followed by a contiguous Directory index, followed by the UTF-8 String Heap.</p>
+                        <table style="width: 100%; border-collapse: collapse; font-family: Consolas, monospace; font-size: 10.5px; margin-bottom: 10px;">
+                            <thead>
+                                <tr style="background-color: #161616; border-bottom: 1px solid #2d2d2d; text-align: left; color: #888;">
+                                    <th style="padding: 4px; width: 20%;">Offset</th>
+                                    <th style="padding: 4px; width: 15%;">Type</th>
+                                    <th style="padding: 4px; width: 20%;">Field</th>
+                                    <th style="padding: 4px; width: 45%;">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid #202020;">
+                                    <td style="padding: 4px; color: #bd93f9;">0x00 (0)</td>
+                                    <td style="padding: 4px; color: #8be9fd;">uint32</td>
+                                    <td style="padding: 4px; color: #50fa7b; font-weight: bold;">count</td>
+                                    <td style="padding: 4px; color: #eee;">Total count of string entries in this table</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #202020;">
+                                    <td style="padding: 4px; color: #bd93f9;">0x04 (4)</td>
+                                    <td style="padding: 4px; color: #8be9fd;">Index[count]</td>
+                                    <td style="padding: 4px; color: #50fa7b;">directory</td>
+                                    <td style="padding: 4px; color: #eee;">Directory mapping entries (10 bytes each)</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #202020;">
+                                    <td style="padding: 4px; color: #bd93f9;">Dynamic</td>
+                                    <td style="padding: 4px; color: #8be9fd;">char[]</td>
+                                    <td style="padding: 4px; color: #50fa7b;">heap</td>
+                                    <td style="padding: 4px; color: #eee;">Contiguous UTF-8 string heap (encoded as 'Name|EDID')</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div style="font-weight: bold; margin-bottom: 4px; color: #fff; font-size: 10px;">Directory Entry Structure (10 Bytes):</div>
+                        <ul style="margin: 0; padding-left: 15px; font-family: Consolas, monospace; font-size: 10px;">
+                            <li><code>+0x00 (uint32)</code>: FormID (fID)</li>
+                            <li><code>+0x04 (uint32)</code>: Offset in String Heap (sOffset)</li>
+                            <li><code>+0x08 (uint16)</code>: Length of string (sLength)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. CUSTOM SCHEMAS -->
+            <div id="mem-detail-schemas" class="mem-detail">
+                <div class="table-container" style="border: 1px solid #2d2d2d; max-height: none; overflow: visible;">
+                    <div style="padding: 4px 8px; background-color: #1e1e1e; font-weight: bold; border-bottom: 1px solid #2d2d2d; color: #50fa7b;">Custom Schemas Segment (schemas)</div>
+                    <div style="padding: 10px; color: #ccc; line-height: 16px;">
+                        <p style="margin-bottom: 8px;">Stores the exact plain-text schema definition rules used to decompose the nested records into flat record rows. Stored as raw UTF-8 text strings.</p>
+                        <div style="background-color: #121212; border: 1px solid #2d2d2d; padding: 6px; font-family: Consolas, monospace; font-size: 10px; color: #a9ffaf; line-height: 13px;">
+                            [REFR:44]<br>
+                            &nbsp;&nbsp;FormID:UInt32:HeaderFormID:0<br>
+                            &nbsp;&nbsp;BaseID:UInt32:NAME:0<br>
+                            &nbsp;&nbsp;X:Float:DATA:0<br>
+                            &nbsp;&nbsp;Y:Float:DATA:4<br>
+                            &nbsp;&nbsp;Z:Float:DATA:8
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. REBUILD CHRONO MAP -->
+            <div id="mem-detail-reconstruct" class="mem-detail">
+                <div class="table-container" style="border: 1px solid #2d2d2d; max-height: none; overflow: visible;">
+                    <div style="padding: 4px 8px; background-color: #1e1e1e; font-weight: bold; border-bottom: 1px solid #2d2d2d; color: #ff5555;">Reconstruction Chronology Map (reconstruction)</div>
+                    <div style="padding: 10px; color: #ccc; line-height: 16px;">
+                        <p style="margin-bottom: 8px;">Reconstruction sequencing index which preserves the chronological ordering of the original ESM. Enables byte-perfect 1:1 rebuilding of the ESM file.</p>
+                        <table style="width: 100%; border-collapse: collapse; font-family: Consolas, monospace; font-size: 10.5px; margin-bottom: 10px;">
+                            <thead>
+                                <tr style="background-color: #161616; border-bottom: 1px solid #2d2d2d; text-align: left; color: #888;">
+                                    <th style="padding: 4px; width: 20%;">Offset</th>
+                                    <th style="padding: 4px; width: 15%;">Type</th>
+                                    <th style="padding: 4px; width: 20%;">Field</th>
+                                    <th style="padding: 4px; width: 45%;">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid #202020;">
+                                    <td style="padding: 4px; color: #bd93f9;">0x00 (0)</td>
+                                    <td style="padding: 4px; color: #8be9fd;">uint32</td>
+                                    <td style="padding: 4px; color: #50fa7b; font-weight: bold;">count</td>
+                                    <td style="padding: 4px; color: #eee;">Total chronological records/entries</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #202020;">
+                                    <td style="padding: 4px; color: #bd93f9;">0x04 (4)</td>
+                                    <td style="padding: 4px; color: #8be9fd;">Entry[]</td>
+                                    <td style="padding: 4px; color: #50fa7b;">chronoEntries</td>
+                                    <td style="padding: 4px; color: #eee;">Repeating stream of chronological records</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div style="font-weight: bold; margin-bottom: 4px; color: #fff; font-size: 10px;">Chrono Entry Layout (Variable Size):</div>
+                        <ul style="margin: 0; padding-left: 15px; font-family: Consolas, monospace; font-size: 10px;">
+                            <li><code>+0x00 (char[4])</code>: Original record signature/type (e.g. 'WEAP')</li>
+                            <li><code>+0x04 (uint8[24])</code>: Original 24-byte record header raw bytes</li>
+                            <li><code>+0x1C (uint32)</code>: Record body size (bodyLen) in bytes</li>
+                            <li><code>+0x20 (uint8[bodyLen])</code>: Raw body payload (if body is not reconstructed from database tables)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formal Offset Calculations & Performance Comparison -->
+            <div class="how-title" style="margin-top: 20px;">Address Offset Mathematics &amp; ESM Comparison</div>
+            <div class="how-section">
+                <!-- Column 1: Offset Calculations -->
+                <div class="how-card" style="border-radius: 0; border-color: #2d2d2d; padding: 12px;">
+                    <h3 style="color:#8be9fd; border-bottom:1px solid #252525; padding-bottom:4px; margin-bottom: 8px; font-size: 11px;">1. Memory Address Calculations</h3>
+                    <p style="color: #ccc; margin-bottom: 8px; line-height: 15px;">
+                        To seek the database field column $C$ of record index $r$ inside a decompressed subsector block, the memory offset is calculated as:
+                    </p>
+                    <div style="background-color: #121212; border: 1px solid #2d2d2d; padding: 8px; font-family: Consolas, monospace; font-size: 10.5px; color: #50fa7b; text-align: center; margin-bottom: 8px;">
+                        Offset(r, C) = (r * rowSize) + colOffset
+                    </div>
+                    <p style="color: #ccc; margin-bottom: 8px; line-height: 15px;">
+                        Where:
+                    </p>
+                    <ul style="padding-left: 15px; color: #ccc; line-height: 15px; margin-bottom: 8px;">
+                        <li><code>r</code>: The zero-based row index of the record.</li>
+                        <li><code>rowSize</code>: Fixed size of a single record database row.</li>
+                        <li><code>colOffset</code>: The relative field offset defined in the schema.</li>
+                    </ul>
+                </div>
+
+                <!-- Column 2: Why it is Better than ESM -->
+                <div class="how-card" style="border-radius: 0; border-color: #2d2d2d; padding: 12px;">
+                    <h3 style="color:#ffb86c; border-bottom:1px solid #252525; padding-bottom:4px; margin-bottom: 8px; font-size: 11px;">2. Architectural Advantages Over ESM</h3>
+                    <ul style="padding-left: 15px; color: #ccc; line-height: 16px; margin-bottom: 0;">
+                        <li><strong>O(1) Seek Performance:</strong> Unlike ESM which requires sequentially walking through nested variable-length record nodes, BESM permits instant index-based seeking.</li>
+                        <li><strong>Multi-Core Optimization:</strong> Subsector blocks can be decompressed and searched independently in parallel across multiple CPU cores.</li>
+                        <li><strong>Cache Locality:</strong> Identical record structures are stored contiguously in memory arrays, minimizing CPU cache misses.</li>
+                        <li><strong>Higher Zlib Compression:</strong> Isolating text strings (String Table) and variable-length data (Blob Pool) leaves highly uniform binary data arrays, achieving much higher compression ratios.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- FormID Addressing & Load Order prefixes -->
+            <div class="how-title" style="margin-top: 20px;">Understanding Bethesda FormIDs &amp; Load Order Prefixes</div>
+            <div class="how-section" style="grid-template-columns: 1fr;">
+                <div class="how-card" style="border-radius: 0; border-color: #2d2d2d; padding: 12px; width: 100%;">
+                    <p style="color: #ccc; margin-bottom: 12px; line-height: 16px;">
+                        A <strong>FormID</strong> is an 8-digit hexadecimal number (32-bit unsigned integer) that serves as a unique identifier for everything in a Bethesda master file.
+                    </p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <h4 style="color:#50fa7b; font-size: 11px; margin-bottom: 4px;">FormID Byte Layout Structure</h4>
+                            <div style="background-color: #121212; border: 1px solid #2d2d2d; padding: 8px; font-family: Consolas, monospace; font-size: 10px; color: #eee; margin-bottom: 8px;">
+                                <span style="color:#ff79c6;">[XX]</span><span style="color:#8be9fd;">[XXXXXX]</span><br>
+                                <span style="color:#ff79c6;">Prefix (2 Hex Digits)</span>: Load Order / Origin Mod<br>
+                                <span style="color:#8be9fd;">Index (6 Hex Digits)</span>: Record Unique Identifier
+                            </div>
+                            <ul style="padding-left: 15px; color: #ccc; line-height: 15px; font-size: 10.5px;">
+                                <li><code>00</code>: Main Game (e.g. <code>Skyrim.esm</code> or <code>Fallout4.esm</code>)</li>
+                                <li><code>01</code>: Update files (e.g. <code>Update.esm</code>)</li>
+                                <li><code>02-FD</code>: standard ESM/ESP plugins depending on active load order</li>
+                                <li><code>FE</code>: Light Plugins (<code>.esl</code> / Creation Club) - uses 3 intermediary digits (e.g. <code>FExxx123</code>)</li>
+                                <li><code>FF</code>: Dynamically allocated in-game objects (temporary playthrough data)</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 style="color:#ffb86c; font-size: 11px; margin-bottom: 4px;">BaseID vs. RefID</h4>
+                            <p style="color: #ccc; line-height: 15px; font-size: 10.5px; margin-bottom: 8px;">
+                                <strong>BaseID</strong> defines the prototype/template structure of an item, NPC, or object (e.g. the weapon stats of a Steel Sword).
+                            </p>
+                            <p style="color: #ccc; line-height: 15px; font-size: 10.5px;">
+                                <strong>RefID</strong> defines a specific placed copy/instance of an object in the world space (e.g. the specific Steel Sword sitting on a table in Breezehome).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="js/bundle.js"></script>
+</body>
+</html>
