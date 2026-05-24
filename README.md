@@ -25,7 +25,7 @@ A compiled BES file is structured into five distinct segments:
 ```text
   +-------------------------------------------------------------+
   |                   Header Segment (24 Bytes)                 |
-  |  - Magic Signature: "BESM", "BESL", or "BESP"              |
+  |  - Magic Signature: "BESM", "BESL", or "BESP"               |
   |  - Version & NumTypes                                       |
   |  - StringTableOffset & BlobPoolOffset                       |
   +-------------------------------------------------------------+
