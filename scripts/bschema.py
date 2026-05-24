@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Vault-Tec Master File Database & Compiler - Custom Binary Schema Parser (.bschema)
+Master File Database & Compiler - Custom Binary Schema Parser (.bschema)
 Parses highly optimized, cache-aligned binary specifications describing
 file headers, record structures, alignment rules, and fast offset maps.
 Supports comma-separated sector definitions, base templates, and dot-notation paths.
