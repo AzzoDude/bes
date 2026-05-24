@@ -1,0 +1,580 @@
+/* ESM Viewer Compact CSS Styling */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    background-color: #121212;
+    color: #e0e0e0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+/* Top Control Bar */
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background-color: #1a1a1a;
+    border-bottom: 1px solid #2d2d2d;
+    flex-wrap: wrap;
+}
+.controls input[type="file"] {
+    font-size: 11px;
+    color: #ccc;
+}
+.controls input[type="text"], .controls select {
+    background-color: #262626;
+    color: #fff;
+    border: 1px solid #3d3d3d;
+    border-radius: 2px;
+    padding: 2px 6px;
+    font-size: 12px;
+    outline: none;
+}
+.controls input[type="text"] {
+    width: 180px;
+}
+.controls select {
+    max-width: 200px;
+}
+.btn {
+    background-color: #2d5a80;
+    color: #fff;
+    border: 1px solid #3d7fb8;
+    border-radius: 2px;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+}
+.btn:hover {
+    background-color: #376e9c;
+}
+.status {
+    color: #888;
+    font-family: monospace;
+    margin-left: auto;
+    padding-right: 6px;
+}
+/* Tabs Bar */
+.tabs {
+    display: flex;
+    background-color: #151515;
+    border-bottom: 1px solid #2d2d2d;
+}
+.tab-btn {
+    background: none;
+    border: none;
+    color: #888;
+    padding: 4px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    border-right: 1px solid #2d2d2d;
+    outline: none;
+}
+.tab-btn:hover {
+    color: #ccc;
+    background-color: #1c1c1c;
+}
+.tab-btn.active {
+    color: #fff;
+    background-color: #222;
+}
+/* Panels */
+.panel {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: #1e1e1e;
+}
+.panel.active {
+    display: flex;
+}
+/* Table Container */
+.table-container {
+    flex: 1;
+    overflow: auto;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Consolas, "Courier New", monospace;
+}
+th, td {
+    border: 1px solid #2d2d2d;
+    padding: 2px 6px;
+    text-align: left;
+    white-space: nowrap;
+}
+th {
+    background-color: #252525;
+    color: #aaa;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+tr:hover {
+    background-color: #282828;
+}
+.mono {
+    color: #8cd0ff;
+}
+.num {
+    color: #ffb86c;
+    text-align: right;
+}
+.badge {
+    display: inline-block;
+    padding: 0 4px;
+    background-color: #333;
+    border-radius: 2px;
+    font-weight: bold;
+    font-size: 10px;
+    color: #fff;
+}
+/* Footer/Pagination */
+.footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 8px;
+    background-color: #1a1a1a;
+    border-top: 1px solid #2d2d2d;
+    font-size: 11px;
+}
+.footer-btns {
+    display: flex;
+    gap: 4px;
+}
+.footer-btn {
+    background-color: #2b2b2b;
+    color: #ccc;
+    border: 1px solid #3d3d3d;
+    border-radius: 2px;
+    padding: 1px 6px;
+    cursor: pointer;
+    font-size: 11px;
+}
+.footer-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* 2D Spatial Layout Additions (Compact Style) */
+.view-mode-bar {
+    padding: 3px 8px;
+    background-color: #181818;
+    border-bottom: 1px solid #2d2d2d;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 11px;
+    color: #888;
+}
+.view-btn {
+    background-color: #262626;
+    color: #888;
+    border: 1px solid #3d3d3d;
+    border-radius: 2px;
+    padding: 1px 6px;
+    font-size: 11px;
+    cursor: pointer;
+}
+.view-btn:hover {
+    color: #ccc;
+    background-color: #303030;
+}
+.view-btn.active {
+    color: #fff;
+    border-color: #00f0ff;
+    background-color: #1a1a1a;
+}
+
+/* Spatial Grid Container Split */
+.spatial-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    background-color: #1e1e1e;
+}
+.spatial-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #2d2d2d;
+    position: relative;
+}
+.spatial-canvas-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    background-color: #181818;
+    border-bottom: 1px solid #2d2d2d;
+}
+.spatial-ctrl-btn {
+    background-color: #2b2b2b;
+    color: #ccc;
+    border: 1px solid #3d3d3d;
+    border-radius: 2px;
+    padding: 0 6px;
+    cursor: pointer;
+    font-size: 11px;
+    height: 18px;
+}
+.spatial-ctrl-btn:hover {
+    background-color: #373737;
+    color: #fff;
+}
+.canvas-parent {
+    flex: 1;
+    position: relative;
+    background-color: #151515;
+    overflow: hidden;
+}
+#spatial-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: grab;
+}
+#spatial-canvas:active {
+    cursor: grabbing;
+}
+.canvas-help-text {
+    position: absolute;
+    bottom: 6px;
+    left: 6px;
+    font-size: 10px;
+    color: #666;
+    pointer-events: none;
+    background-color: rgba(18, 18, 18, 0.85);
+    padding: 1px 4px;
+    border-radius: 2px;
+    font-family: monospace;
+}
+
+/* Right Side Panel: Cell Heatmap & Inspector */
+.spatial-right {
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #2d2d2d;
+    background-color: #1a1a1a;
+}
+.spatial-heatmap-section {
+    height: 220px;
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid #2d2d2d;
+}
+.section-title {
+    font-size: 10px;
+    font-weight: bold;
+    color: #888;
+    padding: 4px 8px;
+    background-color: #1f1f1f;
+    border-bottom: 1px solid #2d2d2d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.heatmap-table-scroll {
+    flex: 1;
+    overflow: auto;
+    padding: 6px;
+    background-color: #151515;
+}
+
+/* 2D Heatmap Grid Table styling */
+.cell-matrix-table {
+    border-collapse: collapse;
+    font-size: 9px;
+    font-family: Consolas, monospace;
+}
+.cell-matrix-table th, .cell-matrix-table td {
+    border: 1px solid #2d2d2d;
+    width: 24px;
+    height: 24px;
+    text-align: center;
+    padding: 0;
+    cursor: pointer;
+}
+.cell-matrix-table th {
+    background-color: #1e1e1e;
+    color: #666;
+    font-weight: normal;
+    pointer-events: none;
+}
+.cell-matrix-table td {
+    color: #fff;
+    transition: all 0.1s;
+}
+.cell-matrix-table td:hover {
+    filter: brightness(1.3);
+}
+.cell-matrix-table td.cell-active {
+    border: 2px solid #ffb86c !important;
+    font-weight: bold;
+}
+.cell-matrix-table td.empty-cell {
+    background-color: #121212;
+    color: #444;
+    cursor: default;
+}
+
+/* Inspector detailed stats section */
+.spatial-inspector-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.inspector-scroll {
+    flex: 1;
+    overflow: auto;
+    padding: 6px;
+    background-color: #121212;
+    font-family: Consolas, monospace;
+    font-size: 11px;
+}
+.inspector-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.inspector-table td {
+    border: 1px solid #202020;
+    padding: 2px 4px;
+    white-space: normal;
+    word-break: break-all;
+    vertical-align: top;
+}
+.inspector-label {
+    color: #888;
+    width: 105px;
+    font-weight: 500;
+}
+.inspector-value {
+    color: #e0e0e0;
+}
+.inspector-value.highlight {
+    color: #00f0ff;
+    font-weight: bold;
+}
+.inspector-value.numeric {
+    color: #ffb86c;
+}
+
+/* Selection Highlight in Grid View Row */
+tr.row-selected {
+    background-color: #1a354c !important;
+    color: #00f0ff !important;
+}
+tr.row-selected td.mono {
+    color: #00f0ff !important;
+}
+tr.row-selected td.num {
+    color: #ffb86c !important;
+}
+
+/* Schema Editor Syntax Highlighting */
+.hl-sig {
+    color: #ff79c6; /* Pink (Signature) */
+    font-weight: bold;
+}
+.hl-col {
+    color: #50fa7b; /* Green (Column Name) */
+}
+.hl-type {
+    color: #8be9fd; /* Cyan (Data Type) */
+}
+.hl-num {
+    color: #bd93f9; /* Purple (Offsets/Numbers) */
+}
+.hl-tag {
+    color: #ffb86c; /* Orange (Bethesda Tag) */
+}
+.hl-comma {
+    color: #6272a4; /* Grey (Comma) */
+}
+.hl-pipe {
+    color: #ff5555; /* Red (Pipe) */
+    font-weight: bold;
+}
+.hl-semi {
+    color: #f1fa8c; /* Yellow (Semicolon) */
+}
+
+/* Schema Field Pills */
+.schema-field {
+    display: inline-flex;
+    align-items: center;
+    background-color: #212121;
+    border: 1px solid #333333;
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin: 2px 3px;
+    font-size: 11px;
+    font-family: Consolas, monospace;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: all 0.15s ease;
+}
+.schema-field:hover {
+    border-color: #555555;
+    background-color: #2a2a2a;
+    transform: translateY(-1px);
+}
+.sf-name {
+    color: #50fa7b; /* Green (Column Name) */
+    font-weight: 600;
+    margin-right: 5px;
+}
+.sf-type {
+    color: #8be9fd; /* Cyan (Data Type) */
+    font-size: 10px;
+    opacity: 0.9;
+    margin-right: 4px;
+}
+.sf-off {
+    color: #bd93f9; /* Purple (Offsets) */
+    font-weight: bold;
+    font-size: 10px;
+}
+
+/* How it Works Tab Styling */
+.how-container {
+    padding: 15px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background-color: #121212;
+}
+.how-title {
+    font-size: 15px;
+    font-weight: bold;
+    color: #ffffff;
+    border-bottom: 1px solid #2d2d2d;
+    padding-bottom: 6px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.how-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+@media (max-width: 768px) {
+    .how-section {
+        grid-template-columns: 1fr;
+    }
+}
+.how-card {
+    background-color: #1a1a1a;
+    border: 1px solid #2d2d2d;
+    border-radius: 4px;
+    padding: 12px;
+}
+.how-card h3 {
+    font-size: 13px;
+    color: #ffb86c;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.how-card p {
+    color: #ccc;
+    font-size: 11px;
+    line-height: 15px;
+    margin-bottom: 8px;
+}
+.how-card ul {
+    padding-left: 15px;
+    color: #bbb;
+    font-size: 11px;
+    line-height: 15px;
+    margin-bottom: 8px;
+}
+.how-code {
+    background-color: #121212;
+    padding: 4px 6px;
+    border-radius: 3px;
+    font-family: Consolas, monospace;
+    font-size: 10.5px;
+    color: #50fa7b;
+    border: 1px solid #222;
+}
+/* Visual File Layout Diagram */
+.file-layout-diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background-color: #171717;
+    border: 1px solid #2d2d2d;
+    border-radius: 4px;
+    padding: 10px;
+    font-family: Consolas, monospace;
+    font-size: 10px;
+    text-align: center;
+}
+.diagram-block {
+    padding: 10px 4px;
+    border-radius: 3px;
+    font-weight: bold;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.05);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+.diag-header { background: linear-gradient(90deg, #ff5555, #ff79c6); }
+.diag-index { background: linear-gradient(90deg, #bd93f9, #8be9fd); color: #121212; }
+.diag-pool { background: linear-gradient(90deg, #50fa7b, #f1fa8c); color: #121212; }
+.diag-sect { background: linear-gradient(90deg, #ffb86c, #ff5555); }
+
+/* Memory Map Visualizer Tab Styling */
+.memory-map-bar {
+    display: flex;
+    gap: 4px;
+    width: 100%;
+    background-color: #121212;
+    border: 1px solid #2d2d2d;
+    padding: 6px;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+}
+.mem-block {
+    flex: 1;
+    padding: 8px;
+    background-color: #1a1a1a;
+    border: 1px solid #2d2d2d;
+    color: #888;
+    text-align: center;
+    cursor: pointer;
+    font-family: Consolas, monospace;
+    font-size: 10px;
+    font-weight: bold;
+    transition: all 0.1s ease-in-out;
+}
+.mem-block:hover {
+    border-color: #444;
+    color: #bbb;
+}
+#mem-btn-header.active { border-color: #ff79c6; color: #ffffff; box-shadow: 0 0 4px rgba(255, 121, 198, 0.2); background-color: #1e1b21; }
+#mem-btn-directory.active { border-color: #ffb86c; color: #ffffff; box-shadow: 0 0 4px rgba(255, 184, 108, 0.2); background-color: #211e1b; }
+#mem-btn-bpool.active { border-color: #8be9fd; color: #ffffff; box-shadow: 0 0 4px rgba(139, 233, 253, 0.2); background-color: #1b2121; }
+#mem-btn-stable.active { border-color: #bd93f9; color: #ffffff; box-shadow: 0 0 4px rgba(189, 147, 249, 0.2); background-color: #1d1b21; }
+#mem-btn-schemas.active { border-color: #50fa7b; color: #ffffff; box-shadow: 0 0 4px rgba(80, 250, 123, 0.2); background-color: #1b211c; }
+#mem-btn-reconstruct.active { border-color: #ff5555; color: #ffffff; box-shadow: 0 0 4px rgba(255, 85, 85, 0.2); background-color: #211b1b; }
+
+.mem-detail {
+    display: none;
+}
+
