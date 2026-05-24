@@ -1,14 +1,14 @@
-# Bethesda Master Binary Database (BESM) Format Specification
+# Binary Elder Scrolls (BES) Format Specification
 
-BESM is an optimized, read-aligned, binary database file format designed to replace or alternate with the traditional sequential Bethesda Master (`.esm` / `.esp` / `.esl`) file structure. 
+BES is an optimized, read-aligned, binary database file format designed to replace or alternate with the traditional sequential Bethesda Master (`.esm` / `.esp` / `.esl`) file structure. 
 
-By reorganizing records into structured, fixed-size data blocks and isolating variable-length data, BESM enables constant-time $O(1)$ random access to any record field directly from disk or memory mapping.
+By reorganizing records into structured, fixed-size data blocks and isolating variable-length data, BES enables constant-time $O(1)$ random access to any record field directly from disk or memory mapping.
 
 ---
 
 ## High-Level Binary Layout
 
-A compiled BESM file is structured into five distinct segments:
+A compiled BES file is structured into five distinct segments:
 
 ```text
 ┌────────────────────────────────────────┐
@@ -34,7 +34,7 @@ The header resides at byte offset `0x00` and contains global directory markers:
 
 | Offset | Size (Bytes) | Data Type | Field Name | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `0x00` | 4 | `char[4]` | `Magic` | Magic identifier signature; must be `"BESM"` |
+| `0x00` | 4 | `char[4]` | `Magic` | Magic identifier signature; must be `"BES\0"`, `"BES "` or `"BESM"` |
 | `0x04` | 4 | `uint32` | `Version` | File format version number |
 | `0x08` | 4 | `uint32` | `NumTypes` | Total number of compiled record types |
 | `0x0C` | 4 | `uint32` | `StringTableOffset` | Absolute byte offset to the String Table |
@@ -49,7 +49,7 @@ Immediately following the file header, this directory contains `NumTypes` entrie
 
 | Offset | Size (Bytes) | Data Type | Field Name | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `0x00` | 4 | `char[4]` | `Signature` | 4-character Bethesda signature (e.g., `"WEAP"`) |
+| `0x00` | 4 | `char[4]` | `Signature` | 4-character record signature (e.g., `"WEAP"`) |
 | `0x04` | 4 | `uint32` | `RecordCount` | Total number of records of this type |
 | `0x08` | 4 | `uint32` | `RowSize` | Fixed width (in bytes) of a single record row |
 | `0x0C` | 4 | `uint32` | `DataOffset` | Absolute byte offset to the start of this type's Flat Row Array |
